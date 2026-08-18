@@ -277,7 +277,6 @@ places:
     open:
       from: "07:00"
       to: "00:30"
-    outdoor: true
     tags:
       - PPL wants this, so you better want it as well
       - brewpub
