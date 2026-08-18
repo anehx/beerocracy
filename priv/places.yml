@@ -99,6 +99,7 @@ places:
       - loud
       - full
       - at the station
+      - you might get sick
     url: https://mccarthysirishpub.ch/bern/
 
   # No `open:` here on purpose — it is our own office, so Mon-Fri all year is
