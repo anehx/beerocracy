@@ -255,3 +255,32 @@ places:
       - at the station
       - courtyard
     url: https://www.progr.ch/en/turnhalle/
+
+  - slug: barbiere
+    name: Barbière
+    tagline: In-house brewery on Breitenrainplatz, across the river from the old town.
+    emoji: 🍻
+    accent: amber
+    beer:
+      rating: 5
+      note: They seem to have some variety and they brew their own beer.
+    food:
+      rating: 3
+      note: Apéro for dinner, easy to share, burgers on Wednesdays.
+    reach:
+      office:
+        walk: 35
+        transit: 15
+      station:
+        walk: 25
+        transit: 10
+    open:
+      from: "07:00"
+      to: "00:30"
+    outdoor: true
+    tags:
+      - PPL wants this, so you better want it as well
+      - brewpub
+      - own brewery
+      - garden
+    url: https://barbiere-bern.ch/
