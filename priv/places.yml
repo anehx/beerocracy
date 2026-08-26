@@ -283,3 +283,31 @@ places:
       - own brewery
       - garden
     url: https://barbiere-bern.ch/
+
+  - slug: simmentalerbrewhouse
+    name: Simmentaler Brewhouse
+    tagline: Brewhouse located at the Bern main station.
+    emoji: 🐄
+    accent: moss
+    beer:
+      rating: 4
+      note: 8 different Simmentaler beers on tap.
+    food:
+      rating: 3
+      note: Flammkuchen, Pinsas, Bagels or Charcuterie and cheese boards.
+    reach:
+      office:
+        walk: 16
+        transit: 11
+      station:
+        walk: 0
+        transit: 0
+    open:
+      from: "07:00"
+      to: "22:30"
+    tags:
+      - brewhouse
+      - garden
+      - online bookable
+      - at the main station
+    url: https://simmentalerbrewhouse.ch/
