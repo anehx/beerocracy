@@ -767,6 +767,12 @@
     font-weight: 700;
     color: var(--color-ink-soft);
   }
+
+  /* Who said what, printed under a tally row. The separator is drawn here so
+     the template need not work out which of the parts turned up. */
+  .names > span + span::before {
+    content: " · ";
+  }
 }
 
 @layer utilities {
