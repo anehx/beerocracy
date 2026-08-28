@@ -311,3 +311,35 @@ places:
       - online bookable
       - at the main station
     url: https://simmentalerbrewhouse.ch/
+
+  # A one-day event rather than a pub: the season pins it to 29 August 2026, so
+  # it falls off the ballot by itself once the Saturday has been and gone.
+  - slug: baconandbeer
+    name: Bacon and Beer Day
+    tagline: One Saturday of bacon and beer in Köniz.
+    emoji: 🥓
+    accent: copper
+    beer:
+      rating: 5
+      note: Half the name of the event.
+    food:
+      rating: 5
+      note: The other half, in the quantities the name implies.
+    reach:
+      office:
+        transit: 17
+      station:
+        transit: 14
+    open:
+      days:
+        - saturday
+      from: "11:00"
+      to: "22:00"
+    season:
+      from: 2026-08-29
+      until: 2026-08-29
+    tags:
+      - out of town
+      - saturday only
+      - one day only
+    url: https://www.baconbeerday.ch/
