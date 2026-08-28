@@ -501,34 +501,6 @@ defmodule BeerocracyWeb.BallotLive do
         </button>
       </div>
 
-      <%!-- The sentence each tile used to keep in a tooltip. A phone cannot
-            hover, so it is printed here in full, behind one toggle for the row.
-            Client-side only: JS commands survive the patches every vote causes. --%>
-      <div :if={@weather != %{}} class="mt-4">
-        <button
-          type="button"
-          id="outlook-toggle"
-          class="data text-ink-soft underline underline-offset-2 hover:text-ink"
-          aria-controls="outlook-detail"
-          aria-expanded="false"
-          phx-click={
-            JS.toggle(to: "#outlook-detail")
-            |> JS.toggle_attribute({"aria-expanded", "true", "false"})
-          }
-        >
-          The outlook in full
-        </button>
-        <dl id="outlook-detail" class="mt-2 hidden space-y-1.5">
-          <div :for={day <- @days} :if={@weather[day.date]} class="data flex gap-3 text-ink-soft">
-            <dt class="w-8 shrink-0 font-bold">
-              <span aria-hidden="true">{Week.short_label(day.weekday)}</span>
-              <span class="sr-only">{Week.label(day.weekday)}</span>
-            </dt>
-            <dd class="min-w-0 flex-1">{Forecast.describe(@weather[day.date])}</dd>
-          </div>
-        </dl>
-      </div>
-
       <p class="data mt-4 text-ink-soft">
         Your answer is the word on the tile. The strokes underneath are everyone's,
         maybes included.
