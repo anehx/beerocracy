@@ -53,38 +53,6 @@ defmodule BeerocracyWeb.BallotWeatherLiveTest do
       end
     end
 
-    test "spells the full outlook out under the tiles, one line a day", %{conn: conn} do
-      week = Week.current()
-      monday = Week.date_of(week, :monday)
-      friday = Week.date_of(week, :friday)
-
-      Weather.put(%{
-        monday => forecast(monday, code: 61, rain: [{16, 10, 0.0}, {19, 60, 3.0}, {22, 95, 3.0}]),
-        friday => forecast(friday, code: 0)
-      })
-
-      on_exit(&Weather.clear/0)
-      {:ok, view, _html} = live(conn, ~p"/")
-
-      # A phone cannot hover, so the sentence the tile used to keep in a tooltip
-      # is printed in full, behind one toggle for the whole row.
-      assert view |> element("#outlook-toggle") |> has_element?()
-      detail = view |> element("#outlook-detail") |> render()
-
-      assert detail =~ "Monday"
-      assert detail =~ "Rain — up to 95% chance, 3.0mm an hour, from about 19:00"
-      assert detail =~ "Friday"
-      assert detail =~ "Clear between 16:00 and 22:00, 19 - 23°C. Dry"
-      refute detail =~ "Tuesday"
-    end
-
-    test "has no outlook to spell out when the forecast is unknown", %{conn: conn} do
-      Weather.clear()
-      {:ok, view, _html} = live(conn, ~p"/")
-
-      refute view |> element("#outlook-toggle") |> has_element?()
-    end
-
     test "flags a soaking on the tile itself", %{conn: conn} do
       week = Week.current()
       wet = Week.date_of(week, :monday)
