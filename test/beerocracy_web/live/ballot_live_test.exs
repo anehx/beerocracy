@@ -64,6 +64,55 @@ defmodule BeerocracyWeb.BallotLiveTest do
 
       assert render(view) =~ "Signed: hanni"
     end
+
+    test "hides nothing behind a hover tooltip", %{conn: conn} do
+      # A phone has no hover, so anything worth saying is printed on the sheet.
+      {:ok, view, _html} = live(conn, ~p"/")
+
+      refute render(view) =~ ~s( title=")
+    end
+  end
+
+  describe "names on the tally" do
+    setup [:signed_in]
+
+    test "prints who is in on each day, yes and maybe apart", %{view: view} do
+      tap_day(view, :wednesday)
+
+      mira = another_voter("Mira")
+      mira |> element("button[phx-value-weekday=wednesday]") |> render_click()
+      mira |> element("button[phx-value-weekday=wednesday]") |> render_click()
+
+      row = view |> element("#tally-day-wednesday") |> render()
+
+      assert row =~ "Yes: Jonas"
+      assert row =~ "Maybe: Mira"
+      refute view |> element("#tally-day-monday") |> render() =~ "Yes:"
+    end
+
+    test "prints who is for and against each place", %{view: view} do
+      tap_day(view, :wednesday)
+      render_hook(view, "swipe", %{"slug" => "shamrock", "liked" => true})
+
+      mira = another_voter("Mira")
+      mira |> element("button[phx-value-weekday=wednesday]") |> render_click()
+      render_hook(mira, "swipe", %{"slug" => "shamrock", "liked" => false})
+
+      row = view |> element("#tally-place-shamrock") |> render()
+
+      assert row =~ "For: Jonas"
+      assert row =~ "Against: Mira"
+      refute view |> element("#tally-place-pickwick") |> render() =~ "For:"
+    end
+
+    test "names whose swipe is parked on a place", %{view: view} do
+      tap_day(view, :wednesday)
+      render_hook(view, "swipe", %{"slug" => "shamrock", "liked" => true})
+
+      render_hook(another_voter("Ada"), "swipe", %{"slug" => "shamrock", "liked" => true})
+
+      assert view |> element("#tally-place-shamrock") |> render() =~ "Waiting: Ada"
+    end
   end
 
   describe "changing your display name" do

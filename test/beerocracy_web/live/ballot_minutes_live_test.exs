@@ -181,7 +181,7 @@ defmodule BeerocracyWeb.BallotMinutesLiveTest do
       html = render(view)
 
       assert html =~ "Where we went"
-      assert html =~ "· recorded"
+      assert html =~ "· recorded by Jonas"
       assert html =~ "Mr. Pickwick Pub"
     end
   end

@@ -491,7 +491,6 @@ defmodule BeerocracyWeb.BallotLive do
           data-past={Week.past?(day.date, @today) || nil}
           data-leader={(@leading && @leading.weekday == day.weekday) || nil}
           class="day-tile"
-          title={day_title(day, @today)}
           aria-label={day_label(day, @stances[day.weekday], @today)}
         >
           <.outlook forecast={@weather[day.date]} />
@@ -500,6 +499,34 @@ defmodule BeerocracyWeb.BallotLive do
           <span class="day-tile-stance">{stance_label(@stances[day.weekday])}</span>
           <span class="day-tile-count">{tally_marks(day.count)}</span>
         </button>
+      </div>
+
+      <%!-- The sentence each tile used to keep in a tooltip. A phone cannot
+            hover, so it is printed here in full, behind one toggle for the row.
+            Client-side only: JS commands survive the patches every vote causes. --%>
+      <div :if={@weather != %{}} class="mt-4">
+        <button
+          type="button"
+          id="outlook-toggle"
+          class="data text-ink-soft underline underline-offset-2 hover:text-ink"
+          aria-controls="outlook-detail"
+          aria-expanded="false"
+          phx-click={
+            JS.toggle(to: "#outlook-detail")
+            |> JS.toggle_attribute({"aria-expanded", "true", "false"})
+          }
+        >
+          The outlook in full
+        </button>
+        <dl id="outlook-detail" class="mt-2 hidden space-y-1.5">
+          <div :for={day <- @days} :if={@weather[day.date]} class="data flex gap-3 text-ink-soft">
+            <dt class="w-8 shrink-0 font-bold">
+              <span aria-hidden="true">{Week.short_label(day.weekday)}</span>
+              <span class="sr-only">{Week.label(day.weekday)}</span>
+            </dt>
+            <dd class="min-w-0 flex-1">{Forecast.describe(@weather[day.date])}</dd>
+          </div>
+        </dl>
       </div>
 
       <p class="data mt-4 text-ink-soft">
@@ -516,7 +543,7 @@ defmodule BeerocracyWeb.BallotLive do
     ~H"""
     <%!-- Rendered even when the forecast is missing, so a day the API has no
           answer for does not make its tile shorter than the other four. --%>
-    <span class="day-tile-weather" title={@forecast && Forecast.describe(@forecast)}>
+    <span class="day-tile-weather">
       <span :if={@forecast} class="day-tile-sky" aria-hidden="true">
         {Forecast.symbol(@forecast)}
       </span>
@@ -940,45 +967,50 @@ defmodule BeerocracyWeb.BallotLive do
       <h3 class="eyebrow mt-8 text-ink-soft">Days</h3>
       <p class="data mt-1 text-ink-soft">Solid is a yes, hatched is a maybe. Both count.</p>
       <div class="mt-3 space-y-2">
-        <div :for={day <- @tally.days} class="flex items-center gap-3">
-          <span class="data w-8 shrink-0 font-bold">{Week.short_label(day.weekday)}</span>
-          <div class="tally-bar flex-1">
-            <div
-              class="tally-fill"
-              style={"width: #{share(day.yes_count, max_day_count(@tally))}%"}
-            >
+        <div :for={day <- @tally.days} id={"tally-day-#{day.weekday}"}>
+          <div class="flex items-center gap-3">
+            <span class="data w-8 shrink-0 font-bold">{Week.short_label(day.weekday)}</span>
+            <div class="tally-bar flex-1">
+              <div
+                class="tally-fill"
+                style={"width: #{share(day.yes_count, max_day_count(@tally))}%"}
+              >
+              </div>
+              <div
+                class="tally-fill"
+                data-tentative
+                style={"width: #{share(day.maybe_count, max_day_count(@tally))}%"}
+              >
+              </div>
             </div>
-            <div
-              class="tally-fill"
-              data-tentative
-              style={"width: #{share(day.maybe_count, max_day_count(@tally))}%"}
-            >
-            </div>
+            <span class="data w-28 shrink-0 truncate text-right text-ink-soft">
+              {day_summary(day)}
+            </span>
           </div>
-          <span
-            class="data w-28 shrink-0 truncate text-right text-ink-soft"
-            title={day_title(day)}
-          >
-            {day_summary(day)}
-          </span>
+          <p :if={day.count > 0} class="names data mt-1 pl-11 text-ink-soft">
+            <span :if={day.certain != []}>Yes: {Enum.join(day.certain, ", ")}</span>
+            <span :if={day.tentative != []}>Maybe: {Enum.join(day.tentative, ", ")}</span>
+          </p>
         </div>
       </div>
 
       <div :if={@history != []}>
         <h3 class="eyebrow mt-8 text-ink-soft">Where we went</h3>
-        <p class="data mt-1 text-ink-soft">So nobody proposes the same pub four weeks running.</p>
+        <p class="data mt-1 text-ink-soft">
+          So nobody proposes the same pub four weeks running.<span :if={
+            Enum.any?(@history, &Ballot.Visit.recorded?/1)
+          }>
+            "Recorded" is where an admin says we actually went, not what the vote said.
+          </span>
+        </p>
         <ol class="mt-3 space-y-1.5">
           <li :for={visit <- @history} class="flex items-baseline gap-3">
             <span class="data w-16 shrink-0 font-bold">W{visit.week.week}</span>
             <span class="data w-8 shrink-0 text-ink-soft">{Week.short_label(visit.weekday)}</span>
             <span class="min-w-0 flex-1 truncate">
               <span aria-hidden="true">{visit.place.emoji}</span> {visit.place.name}
-              <span
-                :if={Ballot.Visit.recorded?(visit)}
-                class="data text-ink-soft"
-                title={"Written down by #{visit.recorded_by}, not what the vote said"}
-              >
-                · recorded
+              <span :if={Ballot.Visit.recorded?(visit)} class="data text-ink-soft">
+                · recorded by {visit.recorded_by}
               </span>
             </span>
             <button
@@ -997,7 +1029,11 @@ defmodule BeerocracyWeb.BallotLive do
 
       <h3 class="eyebrow mt-8 text-ink-soft">Places</h3>
       <div class="mt-1">
-        <div :for={{position, result} <- Ballot.ranked(@tally.places)} class="rank-row">
+        <div
+          :for={{position, result} <- Ballot.ranked(@tally.places)}
+          id={"tally-place-#{result.place.slug}"}
+          class="rank-row"
+        >
           <%!-- Blank for a drawn place: a league table prints the position once
                 and leaves the rows below it empty. --%>
           <span class="rank-no">{position && pad(position)}</span>
@@ -1012,13 +1048,19 @@ defmodule BeerocracyWeb.BallotLive do
               >
               </div>
             </div>
+            <p :if={judged?(result)} class="names data mt-1.5 text-ink-soft">
+              <span :if={result.fans != []}>For: {Enum.join(result.fans, ", ")}</span>
+              <span :if={result.critics != []}>Against: {Enum.join(result.critics, ", ")}</span>
+              <span :if={result.waiting != []} class="text-oxide">
+                Waiting: {Enum.join(result.waiting, ", ")}
+              </span>
+            </p>
           </div>
-          <span class="data whitespace-nowrap text-ink-soft" title={fans_title(result)}>
+          <span class="data whitespace-nowrap text-ink-soft">
             <span class="font-bold text-ink">+{result.likes}</span>
             / −{result.dislikes}<span
               :if={result.waiting_likes + result.waiting_dislikes > 0}
               class="text-oxide"
-              title={"Waiting on a day: #{Enum.join(result.waiting, ", ")}"}
             >
               · +{result.waiting_likes}?</span>
           </span>
@@ -1176,27 +1218,6 @@ defmodule BeerocracyWeb.BallotLive do
   defp stance_label(:maybe), do: "Maybe"
   defp stance_label(nil), do: "—"
 
-  # On a tile the day may already be spent, which is the first thing to say
-  # about it — the tally rows below use the plain version.
-  defp day_title(day, today) do
-    cond do
-      not Week.past?(day.date, today) -> day_title(day)
-      day.count == 0 -> "Been and gone"
-      true -> "Been and gone · #{day_title(day)}"
-    end
-  end
-
-  defp day_title(%{count: 0}), do: "Nobody yet"
-
-  defp day_title(day) do
-    [
-      if(day.certain != [], do: "Yes: #{Enum.join(day.certain, ", ")}"),
-      if(day.tentative != [], do: "Maybe: #{Enum.join(day.tentative, ", ")}")
-    ]
-    |> Enum.reject(&is_nil/1)
-    |> Enum.join(" · ")
-  end
-
   defp day_label(day, stance, today) do
     cond do
       not Week.past?(day.date, today) ->
@@ -1240,16 +1261,9 @@ defmodule BeerocracyWeb.BallotLive do
   defp day_summary(%{count: count, maybe_count: 0}), do: "#{count}"
   defp day_summary(%{count: count, maybe_count: maybe}), do: "#{count} · #{maybe} maybe"
 
-  defp fans_title(%{fans: [], critics: []}), do: "No verdicts yet"
-
-  defp fans_title(%{fans: fans, critics: critics}) do
-    [
-      if(fans != [], do: "For: #{Enum.join(fans, ", ")}"),
-      if(critics != [], do: "Against: #{Enum.join(critics, ", ")}")
-    ]
-    |> Enum.reject(&is_nil/1)
-    |> Enum.join(" · ")
-  end
+  # Whether anybody at all has swiped on this place, parked swipes included.
+  defp judged?(%{fans: [], critics: [], waiting: []}), do: false
+  defp judged?(_result), do: true
 
   defp approved_names(decided) do
     case decided |> Enum.filter(&elem(&1, 1)) |> Enum.map(&elem(&1, 0)) |> Places.filter() do

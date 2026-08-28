@@ -147,7 +147,9 @@ defmodule Beerocracy.Accounts.User do
   name-derived keys written before there was any such thing as signing in.
   """
   @spec voter_key(t()) :: String.t()
-  def voter_key(%__MODULE__{github_id: github_id}), do: "gh:" <> github_id
+  # Matched on `__struct__` rather than `%__MODULE__{}`: Ash only defines the
+  # struct at `@before_compile`, so the struct syntax cannot expand in here.
+  def voter_key(%{__struct__: __MODULE__, github_id: github_id}), do: "gh:" <> github_id
 
   @type t :: %__MODULE__{}
 end
