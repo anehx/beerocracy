@@ -8,7 +8,10 @@ defmodule BeerocracyWeb.Endpoint do
     store: :cookie,
     key: "_beerocracy_key",
     signing_salt: "vBoKQ+vi",
-    same_site: "Lax"
+    same_site: "Lax",
+    # Without it the cookie dies with the browser and takes the sign-in along.
+    # Matches the token lifetime in `Beerocracy.Accounts.User`.
+    max_age: 30 * 24 * 60 * 60
   ]
 
   socket "/live", Phoenix.LiveView.Socket,

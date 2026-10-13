@@ -34,6 +34,10 @@ defmodule Beerocracy.Accounts.User do
       token_resource Beerocracy.Accounts.Token
       signing_secret Beerocracy.Secrets
       store_all_tokens? true
+      # The sheet is visited once a week at best, so the default fortnight
+      # meant signing in again after every skipped week. Kept in step with
+      # the session cookie's `max_age` in the endpoint.
+      token_lifetime {30, :days}
     end
 
     strategies do
