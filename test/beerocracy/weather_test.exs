@@ -185,6 +185,31 @@ defmodule Beerocracy.WeatherTest do
       assert Forecast.summary(95) == "Thunderstorm"
     end
 
+    test "does not draw rain over an evening the verdict calls dry" do
+      # One drizzly hour sets the code, but next to nothing is expected to fall.
+      forecast = window_forecast(code: 61, rain: [{16, 10, 0.0}, {19, 20, 0.1}])
+
+      assert Forecast.verdict(forecast).phrase == "Dry"
+      assert Forecast.symbol(forecast) == "☁️"
+      assert Forecast.summary(forecast) == "Overcast"
+      assert Forecast.describe(forecast) =~ ~r/^Overcast between/
+    end
+
+    test "keeps the rain symbol once the verdict expects something to fall" do
+      forecast = window_forecast(code: 61, rain: [{16, 40, 0.5}])
+
+      assert Forecast.verdict(forecast).phrase == "Maybe drizzle"
+      assert Forecast.symbol(forecast) == "🌧️"
+      assert Forecast.summary(forecast) == "Light rain"
+    end
+
+    test "keeps the thunderstorm even when little rain falls" do
+      forecast = window_forecast(code: 95, rain: [{16, 10, 0.0}])
+
+      assert Forecast.symbol(forecast) == "⛈️"
+      assert Forecast.summary(forecast) == "Thunderstorm"
+    end
+
     test "falls back for a code it has never seen" do
       assert Forecast.symbol(4242) == "🌡️"
       assert Forecast.summary(4242) == "Unknown"

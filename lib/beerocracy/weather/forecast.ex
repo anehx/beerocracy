@@ -89,15 +89,33 @@ defmodule Beerocracy.Weather.Forecast do
     99 => "Thunderstorm with hail"
   }
 
+  # Drizzle, rain, snow and showers: the codes that promise something falling.
+  @falling Enum.concat([51..67, 71..77, 80..86])
+  @overcast 3
+
   @doc "A single glyph for the outlook, or a neutral one for an unknown code."
   @spec symbol(t() | non_neg_integer()) :: String.t()
-  def symbol(%__MODULE__{code: code}), do: symbol(code)
+  def symbol(%__MODULE__{} = forecast), do: forecast |> sky() |> symbol()
   def symbol(code), do: Map.get(@symbols, code, "🌡️")
 
   @doc "The outlook in words, for the tooltip and for screen readers."
   @spec summary(t() | non_neg_integer()) :: String.t()
-  def summary(%__MODULE__{code: code}), do: summary(code)
+  def summary(%__MODULE__{} = forecast), do: forecast |> sky() |> summary()
   def summary(code), do: Map.get(@summaries, code, "Unknown")
+
+  # The code is the single worst hour, while the verdict weighs how much falls
+  # and how likely it is. When the verdict calls the evening dry, a rain cloud
+  # above the word "Dry" only contradicts it — so the verdict wins, and the code
+  # drops to overcast: an hour the model thought wet was cloudy at the very
+  # least. Thunder is left alone, since it is worth knowing about without rain.
+  defp sky(%__MODULE__{code: code} = forecast) when code in @falling do
+    case verdict(forecast) do
+      %{level: 0} -> @overcast
+      _wet_enough -> code
+    end
+  end
+
+  defp sky(%__MODULE__{code: code}), do: code
 
   @doc """
   The temperature range across the window, as it appears on the tile.
